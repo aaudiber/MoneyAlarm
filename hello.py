@@ -27,6 +27,7 @@ def add_to_group():
 @app.route('/adduser', methods=['POST'])
 def add_user():
     app.users[request.form['username']] = [[],""]
+    app.ledger[request.form['username']] = []
     return "success\n"
 
 @app.route("/wakeuptime", methods=['POST'])
@@ -92,11 +93,12 @@ def send_results():
     results = calculate_results(app.users, app.groups[app.users[user][1]], 10)
     for ower, payment in results.items():
         app.ledger[ower].append(payment)
-    return (str(ledger[user]) if ledge[user] else "you get paid") + "\n"
+    return (str(app.ledger[user]) if app.ledger[user] else "you get paid") + "\n"
 
 if __name__ == "__main__":
     os.environ['TZ'] = 'US/Eastern'
     app.groups = {}
     app.users = {} # map from username to (list of delays)
+    app.ledger = {}
     app.day = str(t.tm_year) + str(t.tm_yday - 1)
     app.run(debug=False, host='0.0.0.0', port=8080)
