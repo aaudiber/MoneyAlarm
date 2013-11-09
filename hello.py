@@ -5,9 +5,9 @@ from collections import defaultdict
 
 app = Flask(__name__)
 
-def clear_old_delays(users):
-    for k, v in users.iteritems():
-        users[k][0] = []
+def clear_old_delays():
+    for k, v in app.users.iteritems():
+        app.users[k][0] = []
 
 @app.route('/')
 def show_entries():
@@ -40,6 +40,7 @@ def update_wakeuptime():
 
 
 def calculate_results(users, group, cost):
+
     if app.day == str(t.tm_year) + str(t.tm_yday):
         return {}
     total_owed = 0
@@ -57,7 +58,14 @@ def calculate_results(users, group, cost):
         num_oweds += user_oweds
         balances[username] = (usersum, user_oweds)
 
-    avg_payout = float(total_owed) / num_oweds
+   # Take our cut of $$$$
+    our_cut = 0.9*total_owed
+    remainder_owed = total_owed - our_cut
+
+    if num_oweds == 0:
+        avg_payout = 0
+    else:
+        avg_payout = float(remainder_owed) / num_oweds
 
     positive = []
     negative = []
@@ -68,17 +76,23 @@ def calculate_results(users, group, cost):
             positive.append((user, profit))
         if profit < 0:
             negative.append((user, -profit))
+
+    if num_oweds == 0:
+        positive.append(("Andrew",total_owed))
+    else:
+        positive.append(("Andrew",our_cut))
+
     payments = defaultdict(list) # map users to (who they owe, how much)
     for p in positive:
-        print p
         owed = p[1]
-        while owed > 0.0001:
+        while owed > 0.000001:
             if not negative:
                 print "OH FUCK"
             neg = negative.pop()
             if neg[1] > owed:
                 payments[neg[0]].append((p[0], owed))
-                negative.push((neg[0], neg[1] - owed))
+                negative.append((neg[0], neg[1] - owed))
+                owed = 0;
             else:
                 payments[neg[0]].append((p[0], neg[1]))
                 owed -= neg[1]
@@ -100,5 +114,6 @@ if __name__ == "__main__":
     app.groups = {}
     app.users = {} # map from username to (list of delays)
     app.ledger = {}
+    t = time.localtime()
     app.day = str(t.tm_year) + str(t.tm_yday - 1)
     app.run(debug=False, host='0.0.0.0', port=8080)
