@@ -36,6 +36,39 @@ def send_results():
     results = calculate_results(app.users, app.groups)
     return results[request.username]
 
+def calculate_results(users, groups, cost):
+    groupdelay = {}
+    for groupname in groups:
+        groupsum = 0
+        owed = []
+        payments = []
+        for username in groups[groupname]:
+            usersum = 0
+            for delay in users[username]:
+                if delay > 15:
+                    usersum += delay
+                else:
+                    owed.append({username : 0.0})
+            groupsum += usersum
+            payments.append{username : usersum})
+
+        avg_owed = groupsum/len(owed)
+        for item in owed:
+            for name in item:
+                item[name] = avg_owed
+
+
+
+
+
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
     app.groups = {}
     app.users = {} # map from username to (group, list of delays)
