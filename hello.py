@@ -1,75 +1,102 @@
+import os, time
 from flask import g, request, session, redirect, flash, Flask
+from collections import defaultdict
+# users: map from username to list of [delays list, group name]
 
 app = Flask(__name__)
 
-@app.before_request
-def before_request():
-    g.db = connect_db()
-
-@app.teardown_appcontext
-def close_db(error):
-    if hasattr(g, 'sqlite_db'):
-        g.sqlite_db.close()
+def clear_old_delays(users):
+    for k, v in users.iteritems():
+        users[k][0] = []
 
 @app.route('/')
 def show_entries():
-    return app.groups
+    return str(app.groups) + "\n" + str(app.users)
 
-@app.route('/addgroup')
+@app.route('/addgroup', methods=['POST'])
 def add_group():
-    app.groups[request.groupname] = []
+    app.groups[request.form['groupname']] = []
+    return "success\n"
 
-@app.route('/addtogroup')
+@app.route('/addtogroup', methods=['POST'])
 def add_to_group():
-    app.groups[request.groupname].append(request.username)
+    app.users[request.form['username']][1] = request.form['groupname']
+    app.groups[request.form['groupname']].append(request.form['username'])
+    return "success\n"
 
-@app.route('/adduser')
+@app.route('/adduser', methods=['POST'])
 def add_user():
-    app.users[request.username] = []
+    app.users[request.form['username']] = [[],""]
+    return "success\n"
 
 @app.route("/wakeuptime", methods=['POST'])
 def update_wakeuptime():
-    app.users[request.username].append(request.delay)
+    t = time.localtime()
+    ts = str(t.tm_year) + str(t.tm_yday)
+    delay = int(request.form['delay'])
+    app.users[request.form['username']][0].append((delay, ts))
+    return "success\n"
 
-@app.route("/getresults")
+
+def calculate_results(users, group, cost):
+    if app.day == str(t.tm_year) + str(t.tm_yday):
+        return {}
+    total_owed = 0
+    num_oweds = 0
+    balances = {} # people to (how much they owe, how much they are owed)
+    for username in group:
+        usersum = 0
+        user_oweds = 0
+        for delay in users[username][0]:
+            if delay[0] > 15:
+                usersum += delay[0]
+            else:
+                user_oweds += 1
+        total_owed += usersum
+        num_oweds += user_oweds
+        balances[username] = (usersum, user_oweds)
+
+    avg_payout = float(total_owed) / num_oweds
+
+    positive = []
+    negative = []
+    for user, balance in balances.items():
+        owes, oweds = balance
+        profit = oweds * avg_payout - owes
+        if profit > 0:
+            positive.append((user, profit))
+        if profit < 0:
+            negative.append((user, -profit))
+    payments = defaultdict(list) # map users to (who they owe, how much)
+    for p in positive:
+        print p
+        owed = p[1]
+        while owed > 0.0001:
+            if not negative:
+                print "OH FUCK"
+            neg = negative.pop()
+            if neg[1] > owed:
+                payments[neg[0]].append((p[0], owed))
+                negative.push((neg[0], neg[1] - owed))
+            else:
+                payments[neg[0]].append((p[0], neg[1]))
+                owed -= neg[1]
+
+    clear_old_delays()
+    app.day = str(t.tm_year) + str(t.tm_yday)
+    return payments
+
+@app.route("/getresults", methods=['POST'])
 def send_results():
-    results = calculate_results(app.users, app.groups)
-    return results[request.username]
-
-def calculate_results(users, groups, cost):
-    groupdelay = {}
-    for groupname in groups:
-        groupsum = 0
-        owed = []
-        payments = []
-        for username in groups[groupname]:
-            usersum = 0
-            for delay in users[username]:
-                if delay > 15:
-                    usersum += delay
-                else:
-                    owed.append({username : 0.0})
-            groupsum += usersum
-            payments.append{username : usersum})
-
-        avg_owed = groupsum/len(owed)
-        for item in owed:
-            for name in item:
-                item[name] = avg_owed
-
-
-
-
-
-
-
-
-
-
-
-
+    user = request.form['username']
+    results = calculate_results(app.users, app.groups[app.users[user][1]], 10)
+    for ower, payment in results.items():
+        app.ledger[ower].append(payment)
+    return (str(ledger[user]) if ledge[user] else "you get paid") + "\n"
 
 if __name__ == "__main__":
+    os.environ['TZ'] = 'US/Eastern'
     app.groups = {}
-    app.users = {} # map from username to (group, list of delays)
+    app.users = {} # map from username to (list of delays)
+    app.day = str(t.tm_year) + str(t.tm_yday - 1)
     app.run(debug=False, host='0.0.0.0', port=8080)
