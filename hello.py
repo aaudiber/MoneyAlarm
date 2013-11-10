@@ -4,6 +4,7 @@ from flask import g, request, session, redirect, flash, Flask, url_for
 from collections import defaultdict
 # users: map from username to list of [delays list, group name]
 from constants import CONSUMER_ID, CONSUMER_SECRET, APP_SECRET
+from twilio.rest import TwilioRestClient
 
 app = Flask(__name__)
 app.secret_key = APP_SECRET
@@ -38,7 +39,8 @@ def authorized():
 
     session['venmo_token'] = access_token
     session['venmo_username'] = user['username']
-    return 'You were signed in as %s' % user['username']
+    return redirect(url_for('static', filename='alrms.html'))
+
 
 @app.route('/addgroup', methods=['POST'])
 def add_group():
@@ -98,7 +100,13 @@ def get_number():
 
 def call_num(number):
     # TODO do twilio magic?
-    print 'want to call %d now at time %f' % (number, time.time())
+    account_sid = "ACf39739d311791f705a5b144bb028bcd4"
+    auth_token  = "27976805fa4cd95997e55dbfc05bc16c"
+    client = TwilioRestClient(account_sid, auth_token)
+    message = client.messages.create(body="Wake up, motherfucker",
+    to="+" + str(number),
+    from_="+16094540383")
+    print message.sid
 
 def calculate_results(users, group, cost):
     t = time.localtime()
