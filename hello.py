@@ -1,13 +1,12 @@
-import os, time, requests, json, calendar, datetime
+import os, time, requests, json, calendar, datetime, sys
 from threading import Timer
 from flask import g, request, session, redirect, flash, Flask, url_for
 from collections import defaultdict
 # users: map from username to list of [delays list, group name]
-from constants import CONSUMER_ID, CONSUMER_SECRET, APP_SECRET
+from constants import *
 from twilio.rest import TwilioRestClient
 
 app = Flask(__name__)
-app.secret_key = APP_SECRET
 
 def clear_old_delays():
     for k, v in app.users.iteritems():
@@ -27,8 +26,7 @@ def authorized():
     data = {
         "client_id":CONSUMER_ID,
         "client_secret":CONSUMER_SECRET,
-        "code":AUTHORIZATION_CODE,
-        "secret_key":APP_SECRET
+        "code":AUTHORIZATION_CODE
         }
     url = "https://api.venmo.com/oauth/access_token"
     response = requests.post(url, data)
@@ -70,15 +68,20 @@ def update_wakeuptime():
 @app.route('/alarms',methods = ['POST'])
 def add_alarm():
     def totime(s):
+        print s
         [h,m] = map(int, s.split(':'))
-        newh = h+5
-        return calendar.timegm(datetime.datetime(2013,11,10+newh/24,newh%24,m).utctimetuple())
-    alarmTime = totime(request.form['time'])
-    app.alarms[get_number()].append(alarmTime)
-    diff = alarmTime - time.time()
-    if diff < 0:
-        return "wow fuck you %d"% diff
+        h += 5
+
+        t = time.gmtime()
+        diff = 60 * 60 * (h - t.tm_hour) + 60 * (m - t.tm_min)
+        if diff < 0:
+            diff += 24 * 60 * 60
+
+        return (time.time() + diff, diff)
     number = get_number()
+    alarmTime, diff = totime(request.form['time'])
+    app.alarms[number].append(alarmTime)
+
     def do_motherfucker():
         with app.test_request_context():
             call_num(number)
@@ -189,4 +192,13 @@ if __name__ == "__main__":
     app.alarms = defaultdict(list) # map from username to alarms for the user
     t = time.localtime()
     app.day = str(t.tm_year) + str(t.tm_yday - 1)
-    app.run(debug=True, host='0.0.0.0', port=8080)
+
+    if len(sys.argv) == 2:
+        CONSUMER_ID = ANDREW_CONSUMER_ID
+        CONSUMER_SECRET = ANDREW_CONSUMER_SECRET
+        APP_SECRET = ANDREW_APP_SECRET
+        p = 8081
+    else:
+        p = 8080
+    app.secret_key = APP_SECRET
+    app.run(debug=True, host='0.0.0.0', port=p)
