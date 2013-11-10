@@ -4,6 +4,7 @@ from collections import defaultdict
 # users: map from username to list of [delays list, group name]
 from constants import CONSUMER_ID, CONSUMER_SECRET, APP_SECRET
 import requests
+import json
 
 app = Flask(__name__)
 app.secret_key = APP_SECRET
@@ -69,17 +70,19 @@ def update_wakeuptime():
     app.users[request.form['username']][0].append((delay, ts))
     return "success\n"
 
-"""@app.route('/addalarm',methods = ['POST'])
+@app.route('/addalarm',methods = ['POST'])
 def add_alarm():
-    app.users[request.form]
-    alarmTime = request.form['alarm_time']
-    while True:
-        if time.localtime() == alarmTime:
-"""
+    app.alarms[get_number(session)].append(request.form['time'])
+    return "success\n"
+
+@app.route('/getalarm')
+def get_alarms():
+    username = get_number(session)
+    return json.dumps(app.alarms)
 
 
 def calculate_results(users, group, cost):
-
+    t = time.localtime()
     if app.day == str(t.tm_year) + str(t.tm_yday):
         return {}
     total_owed = 0
@@ -121,6 +124,9 @@ def calculate_results(users, group, cost):
     else:
         positive.append(("Andrew",our_cut))
 
+    print positive
+    print negative
+
     payments = defaultdict(list) # map users to (who they owe, how much)
     for p in positive:
         owed = p[1]
@@ -153,6 +159,7 @@ if __name__ == "__main__":
     app.groups = {}
     app.users = {} # map from username to (list of delays)
     app.ledger = {}
+    app.alarms = defaultdict(list) # map from username to alarms for the user
     t = time.localtime()
     app.day = str(t.tm_year) + str(t.tm_yday - 1)
     app.run(debug=False, host='0.0.0.0', port=8080)
