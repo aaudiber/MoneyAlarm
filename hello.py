@@ -71,7 +71,7 @@ def add_alarm():
     def totime(s):
         [h,m] = map(int, s.split(':'))
         newh = h+5
-        return calendar.timegm(datetime.datetime(2013,11,9+newh/24,newh%24,m).utctimetuple())
+        return calendar.timegm(datetime.datetime(2013,11,10+newh/24,newh%24,m).utctimetuple())
     alarmTime = totime(request.form['time'])
     diff = alarmTime - time.time()
     if diff < 0:
