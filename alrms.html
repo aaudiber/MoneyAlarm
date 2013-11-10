@@ -2,12 +2,15 @@
 <head>
   <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/foundation/4.3.2/css/foundation.css"></link>
   <link rel="stylesheet" href="alrm.css"></link>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js"></script>
 </head>
 <body>
   <div class="row">
     <div class="large-3 columns" id="alarms">
       <h2>Alrms</h2>
-      <ul>
+      <ul id="alarms-list">
+        <li class="sunrise">6:00 AM</li>
+        <li class="morning">9:00 AM</li>
         <li class="noon">12:15 PM</li>
         <li class="early-afternoon">1:45 PM</li>
         <li class="mid-afternoon">3:00 PM</li>
@@ -20,7 +23,7 @@
   </div>
   <div class="row">
     <div class="large-3 columns">
-      <form action="" method="POST">
+      <form action="addalarm" method="POST">
         <input name="time" type="time"/>
         <button class="small expand">Add</button>
       </form>

@@ -14,6 +14,14 @@
   font-weight: 300;
 }
 
+.sunrise {
+  background-color: rgba(64,156,255,1);
+}
+
+.morning {
+  background-color: rgba(64,156,255,1);
+}
+
 .noon {
   background-color: rgba(64,156,255,1);
 }
