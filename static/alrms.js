@@ -3,6 +3,9 @@ $(document).ready(function() {
     console.log(data);
     var alarms = JSON.parse(data);
     var $alarmsList = $('#alarms-list');
+    if (alarms.length > 0) {
+      $('#alarms-list li').remove();
+    }
     for(var i = 0; i < alarms.length; i++) {
       var date = new Date(alarms[i] * 1000);
       var listItem = document.createElement('li');
