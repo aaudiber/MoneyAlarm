@@ -65,7 +65,7 @@ def update_wakeuptime():
     app.users[request.form['username']][0].append((delay, ts))
     return "success\n"
 
-@app.route('/addalarm',methods = ['POST'])
+@app.route('/alarms',methods = ['POST'])
 def add_alarm():
     app.alarms[get_number()].append(request.form['time'])
     def totime(s):
@@ -83,10 +83,10 @@ def add_alarm():
     Timer(diff, do_motherfucker, ()).start()
     return "good fuck"
 
-@app.route('/getalarm')
+@app.route('/alarms', methods = ['GET'])
 def get_alarms():
     username = get_number()
-    return json.dumps(app.alarms)
+    return json.dumps(app.alarms[username])
 
 def get_number():
     if 'number' not in session:
