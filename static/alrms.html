@@ -7,7 +7,9 @@
 </head>
 <body>
   <div class="row">
-    <div class="large-3 columns" id="alarms">
+  <div class="large-4 large-offset-4 columns" id="main">
+  <div class="row">
+    <div class="large-12 columns" id="alarms">
       <h2>Alrms</h2>
       <ul id="alarms-list">
         <li class="noon">None</li>
@@ -15,12 +17,14 @@
     </div>
   </div>
   <div class="row">
-    <div class="large-3 columns">
-      <form action="/alarms" method="POST">
-        <input name="time" type="time"/>
-        <button class="small expand">Add</button>
-      </form>
+    <div class="large-12 columns">
+    <form action="/alarms" method="POST">
+      <input name="time" type="time"/>
+      <button class="small expand">Add</button>
+    </form>
     </div>
+  </div>
+  </div>
   </div>
 </body>
 </HTML>
