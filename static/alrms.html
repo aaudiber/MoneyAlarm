@@ -4,8 +4,14 @@
   <link rel="stylesheet" href="alrm.css"></link>
   <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js"></script>
   <script src="alrms.js"></script>
+  <script src="clock.js"></script>
 </head>
-<body>
+<body onload="updateClock(); setInterval('updateClock()', 1000 )">
+  <div class="row">
+    <div class="large-4 large-offset-4 columns" id="clock">
+    &nbsp;
+    </div>
+  </div>
   <div class="row">
   <div class="large-4 large-offset-4 columns" id="main">
   <div class="row">
