@@ -101,6 +101,32 @@ def get_number():
         session['number'] = int(response_dict.get(u'data').get(u'phone'))
     return session['number']
 
+@app.route('/getMsg', methods = ['POST'])
+def get_msg():
+    # Take the earliest alarm that has not been responded to
+    currTime = time.time()
+    print 'from', request.form['From']
+    print 'alarms', app.alarms
+    alarmkey = int(request.form['From'])
+    alarms = app.alarms[alarmkey]
+    print alarms
+    earliestTime = float('inf')
+    for alarmtime in alarms:
+        print alarmtime
+        if (alarmtime < currTime) and (alarmtime < earliestTime):
+                earliestTime = alarmtime;
+    # Pop the alarm that was responded to
+    app.alarms[alarmkey].pop(app.alarms[alarmkey].index(int(earliestTime)))
+
+    # Store delays and count of times woken up on time in app.delays
+
+    if (currTime - alarmtime) > 15.0:
+        app.delays[alarmkey] = app.delays.get(alarmkey, 0) + currTime - alarmtime
+    else:
+        app.successes[alarmkey] = app.successes.get(alarmkey, 0) + 1
+    print app.delays, app.successes
+    return "success"
+
 def call_num(number):
     # TODO do twilio magic?
     account_sid = "ACf39739d311791f705a5b144bb028bcd4"
@@ -201,4 +227,6 @@ if __name__ == "__main__":
     else:
         p = 8080
     app.secret_key = APP_SECRET
+    app.delays = {}
+    app.successes = {}
     app.run(debug=True, host='0.0.0.0', port=p)
