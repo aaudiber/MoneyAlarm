@@ -1,10 +1,9 @@
-import os, time
-from flask import g, request, session, redirect, flash, Flask
+import os, time, requests, json, calendar, datetime
+from threading import Timer
+from flask import g, request, session, redirect, flash, Flask, url_for
 from collections import defaultdict
 # users: map from username to list of [delays list, group name]
 from constants import CONSUMER_ID, CONSUMER_SECRET, APP_SECRET
-import requests
-import json
 
 app = Flask(__name__)
 app.secret_key = APP_SECRET
@@ -15,11 +14,11 @@ def clear_old_delays():
 
 @app.route('/')
 def index():
-    print "hi"
     if session.get('venmo_token'):
-        return 'Your Venmo token is %s' % session.get('venmo_token')
+        return redirect(url_for('static', filename='alrms.html'))
+        # return 'Your Venmo token is %s' % session.get('venmo_token')
     else:
-        return redirect('https://api.venmo.com/oauth/authorize?client_id=%s&scope=make_payments,access_profile&response_type=code' % CONSUMER_ID)
+        return redirect('https://api.venmo.com/oauth/authorize?client_id=%s&scope=make_payments,access_phone,access_profile&response_type=code' % CONSUMER_ID)
 
 @app.route('/redirect', methods = ['GET'])
 def authorized():
@@ -31,18 +30,14 @@ def authorized():
         "secret_key":APP_SECRET
         }
     url = "https://api.venmo.com/oauth/access_token"
-    try:
-        response = requests.post(url, data)
+    response = requests.post(url, data)
 
-        response_dict = response.json()
-        access_token = response_dict.get('access_token')
-        user = response_dict.get('user')
+    response_dict = response.json()
+    access_token = response_dict.get('access_token')
+    user = response_dict.get('user')
 
-        session['venmo_token'] = access_token
-        session['venmo_username'] = user['username']
-    except Exception as e:
-        return str(e)
-
+    session['venmo_token'] = access_token
+    session['venmo_username'] = user['username']
     return 'You were signed in as %s' % user['username']
 
 @app.route('/addgroup', methods=['POST'])
@@ -72,14 +67,38 @@ def update_wakeuptime():
 
 @app.route('/addalarm',methods = ['POST'])
 def add_alarm():
-    app.alarms[get_number(session)].append(request.form['time'])
-    return "success\n"
+    app.alarms[get_number()].append(request.form['time'])
+    def totime(s):
+        [h,m] = map(int, s.split(':'))
+        newh = h+5
+        return calendar.timegm(datetime.datetime(2013,11,9+newh/24,newh%24,m).utctimetuple())
+    alarmTime = totime(request.form['time'])
+    diff = alarmTime - time.time()
+    if diff < 0:
+        return "wow fuck you %d"% diff
+    number = get_number()
+    def do_motherfucker():
+        with app.test_request_context():
+            call_num(number)
+    Timer(diff, do_motherfucker, ()).start()
+    return "good fuck"
 
 @app.route('/getalarm')
 def get_alarms():
     username = get_number(session)
     return json.dumps(app.alarms)
 
+def get_number():
+    if 'number' not in session:
+        resp = requests.get("https://api.venmo.com/me?access_token=%s" %
+                            session.get('venmo_token'))
+        response_dict = resp.json()
+        session['number'] = int(response_dict.get(u'data').get(u'phone'))
+    return session['number']
+
+def call_num(number):
+    # TODO do twilio magic?
+    print 'want to call %d now at time %f' % (number, time.time())
 
 def calculate_results(users, group, cost):
     t = time.localtime()
@@ -162,4 +181,4 @@ if __name__ == "__main__":
     app.alarms = defaultdict(list) # map from username to alarms for the user
     t = time.localtime()
     app.day = str(t.tm_year) + str(t.tm_yday - 1)
-    app.run(debug=False, host='0.0.0.0', port=8080)
+    app.run(debug=True, host='0.0.0.0', port=8080)
