@@ -1,0 +1,43 @@
+#alarms {
+  text-align: center;
+}
+
+#alarms li {
+  list-style-type: none;
+  color: white;
+}
+
+#alarms h2 {
+  background-color: #F47F24;
+  color: white;
+  margin-bottom: 0px;
+  font-weight: 300;
+}
+
+.noon {
+  background-color: rgba(64,156,255,1);
+}
+
+.early-afternoon {
+  background-color: rgba(74,146,235,1);
+}
+
+.mid-afternoon {
+  background-color: rgba(94,126,225,1);
+}
+
+.late-afternoon {
+  background-color: rgba(124,106,175,1);
+}
+
+.dusk {
+  background-color: rgba(184,96,95,1);
+}
+
+.early-night {
+  background-color: rgba(154,76,75,1);
+}
+
+.night {
+  background-color: rgba(24,26,105,1);
+}
