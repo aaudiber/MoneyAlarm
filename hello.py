@@ -85,7 +85,7 @@ def add_alarm():
 
 @app.route('/getalarm')
 def get_alarms():
-    username = get_number(session)
+    username = get_number()
     return json.dumps(app.alarms)
 
 def get_number():
