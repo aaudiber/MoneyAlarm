@@ -1,4 +1,4 @@
-$.get('alarms', function(data) {
+$.get('../alarms', function(data) {
   console.log(data);
   var alarms = JSON.parse(data);
   var $alarmsList = $('#alarms-list');
