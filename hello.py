@@ -67,12 +67,12 @@ def update_wakeuptime():
 
 @app.route('/alarms',methods = ['POST'])
 def add_alarm():
-    app.alarms[get_number()].append(request.form['time'])
     def totime(s):
         [h,m] = map(int, s.split(':'))
         newh = h+5
         return calendar.timegm(datetime.datetime(2013,11,10+newh/24,newh%24,m).utctimetuple())
     alarmTime = totime(request.form['time'])
+    app.alarms[get_number()].append(alarmTime)
     diff = alarmTime - time.time()
     if diff < 0:
         return "wow fuck you %d"% diff
