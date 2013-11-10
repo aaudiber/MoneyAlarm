@@ -81,7 +81,7 @@ def add_alarm():
         with app.test_request_context():
             call_num(number)
     Timer(diff, do_motherfucker, ()).start()
-    return "good fuck"
+    return redirect(url_for('static', filename='alrms.html'))
 
 @app.route('/alarms', methods = ['GET'])
 def get_alarms():
