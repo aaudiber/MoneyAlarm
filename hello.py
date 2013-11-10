@@ -2,16 +2,47 @@ import os, time
 from flask import g, request, session, redirect, flash, Flask
 from collections import defaultdict
 # users: map from username to list of [delays list, group name]
+from constants import CONSUMER_ID, CONSUMER_SECRET, APP_SECRET
+import requests
 
 app = Flask(__name__)
+app.secret_key = APP_SECRET
 
 def clear_old_delays():
     for k, v in app.users.iteritems():
         app.users[k][0] = []
 
 @app.route('/')
-def show_entries():
-    return str(app.groups) + "\n" + str(app.users)
+def index():
+    print "hi"
+    if session.get('venmo_token'):
+        return 'Your Venmo token is %s' % session.get('venmo_token')
+    else:
+        return redirect('https://api.venmo.com/oauth/authorize?client_id=%s&scope=make_payments,access_profile&response_type=code' % CONSUMER_ID)
+
+@app.route('/redirect', methods = ['GET'])
+def authorized():
+    AUTHORIZATION_CODE = request.args.get('code')
+    data = {
+        "client_id":CONSUMER_ID,
+        "client_secret":CONSUMER_SECRET,
+        "code":AUTHORIZATION_CODE,
+        "secret_key":APP_SECRET
+        }
+    url = "https://api.venmo.com/oauth/access_token"
+    try:
+        response = requests.post(url, data)
+
+        response_dict = response.json()
+        access_token = response_dict.get('access_token')
+        user = response_dict.get('user')
+
+        session['venmo_token'] = access_token
+        session['venmo_username'] = user['username']
+    except Exception as e:
+        return str(e)
+
+    return 'You were signed in as %s' % user['username']
 
 @app.route('/addgroup', methods=['POST'])
 def add_group():
@@ -37,6 +68,14 @@ def update_wakeuptime():
     delay = int(request.form['delay'])
     app.users[request.form['username']][0].append((delay, ts))
     return "success\n"
+
+"""@app.route('/addalarm',methods = ['POST'])
+def add_alarm():
+    app.users[request.form]
+    alarmTime = request.form['alarm_time']
+    while True:
+        if time.localtime() == alarmTime:
+"""
 
 
 def calculate_results(users, group, cost):
