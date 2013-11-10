@@ -1,0 +1,3 @@
+CONSUMER_ID = 1484
+CONSUMER_SECRET = '5nuryGqaNCtJsJvz4XvrTzfXvsbPNvKu'
+APP_SECRET = 'happyapps'
