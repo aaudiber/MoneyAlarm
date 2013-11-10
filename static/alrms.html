@@ -3,6 +3,7 @@
   <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/foundation/4.3.2/css/foundation.css"></link>
   <link rel="stylesheet" href="alrm.css"></link>
   <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js"></script>
+  <script src="alrms.js"></script>
 </head>
 <body>
   <div class="row">
@@ -23,7 +24,7 @@
   </div>
   <div class="row">
     <div class="large-3 columns">
-      <form action="addalarm" method="POST">
+      <form action="/alarms" method="POST">
         <input name="time" type="time"/>
         <button class="small expand">Add</button>
       </form>
